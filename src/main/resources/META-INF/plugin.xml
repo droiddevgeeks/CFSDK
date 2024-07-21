@@ -1,18 +1,13 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.droiddevgeeks.cfsdk</id>
-    <name>CFSDK</name>
+    <name>Cashfree SDK Update</name>
     <vendor>droiddevgeeks</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.droiddevgeeks.cfsdk.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <postStartupActivity implementation="com.github.droiddevgeeks.cfsdk.CFPluginStartActivity"/>
+        <notificationGroup id="SDK Updates" displayType="BALLOON" isLogByDefault="true"/>
     </extensions>
-
-    <applicationListeners>
-        <listener class="com.github.droiddevgeeks.cfsdk.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
 </idea-plugin>
