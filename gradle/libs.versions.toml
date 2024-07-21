@@ -1,16 +1,20 @@
 [versions]
 # libraries
 exampleLibrary = "24.1.0"
+retrofitVersion = "2.11.0"
+gsonConverter = "2.11.0"
 
 # plugins
-kotlin = "1.9.24"
-changelog = "2.2.0"
+kotlin = "2.0.0"
+changelog = "2.2.1"
 gradleIntelliJPlugin = "1.17.4"
 qodana = "2024.1.5"
-kover = "0.8.1"
+kover = "0.8.3"
 
 [libraries]
 exampleLibrary = { group = "com.example", name = "exampleLibrary", version.ref = "exampleLibrary" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofitVersion" }
+gsonConvertor = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "gsonConverter" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
