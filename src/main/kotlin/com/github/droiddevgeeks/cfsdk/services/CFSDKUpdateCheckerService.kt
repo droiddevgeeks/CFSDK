@@ -26,13 +26,12 @@ import java.util.concurrent.TimeUnit
 @Service(Service.Level.PROJECT)
 class CFSDKUpdateCheckerService(private val project: Project) {
 
-    init {
-        thisLogger().warn("UpdateCheckerService init")
-    }
-
     companion object {
-        private val INTERVAL: Long = TimeUnit.MINUTES.toMillis(1)
+        private val INTERVAL: Long = TimeUnit.DAYS.toMillis(1)
         private const val NOTIFICATION_GROUP_ID = "SDK Updates"
+        private const val NOTIFICATION_TITLE = "CashFree SDK Update Available"
+        private const val NOTIFICATION_CONTENT = "Click here to check the latest SDK information"
+        private const val NOTIFICATION_ACTION_TEXT = "Check Updates"
         private const val UPDATE_URL = "https://docs.cashfree.com/docs/android-changelog"
     }
 
@@ -56,7 +55,7 @@ class CFSDKUpdateCheckerService(private val project: Project) {
         CoroutineScope(Dispatchers.Default).launch {
             val hasUpdates = fetchSdkUpdates()
             if (hasUpdates) {
-                thisLogger().warn("UpdateCheckerService has update")
+                thisLogger().info("UpdateCheckerService has update")
                 showNotification()
             }
             addScheduleForCheckUpdates()
@@ -71,18 +70,14 @@ class CFSDKUpdateCheckerService(private val project: Project) {
         }
         try {
             val data = job.await()
-            thisLogger().warn("UpdateCheckerService::: $data")
-            thisLogger().warn("UpdateCheckerService::: ${sdkPlatform}")
             data?.let {
                 val sdk = it.find { sdkInfo ->
                     sdkPlatform.toString().contentEquals(sdkInfo.platform, true)
                 }
                 sdk?.let {
-                    if (previousSdkVersion <= sdk.currentVersion) {
-                        previousSdkVersion = sdk.currentVersion
-                        changeLogUrl = sdk.url
-                        return true
-                    } else return false
+                    previousSdkVersion = sdk.currentVersion
+                    changeLogUrl = sdk.url
+                    return true
                 } ?: kotlin.run {
                     return false
                 }
@@ -99,12 +94,12 @@ class CFSDKUpdateCheckerService(private val project: Project) {
         val notification = NotificationGroupManager.getInstance()
             .getNotificationGroup(NOTIFICATION_GROUP_ID)
             .createNotification(
-                "SDK Update Available",
-                "Click here to check the latest SDK information",
+                NOTIFICATION_TITLE,
+                NOTIFICATION_CONTENT,
                 NotificationType.INFORMATION
             )
 
-        notification.addAction(object : AnAction("Check Updates") {
+        notification.addAction(object : AnAction(NOTIFICATION_ACTION_TEXT) {
             override fun actionPerformed(e: AnActionEvent) {
                 BrowserUtil.browse(changeLogUrl ?: UPDATE_URL)
                 notification.expire()
