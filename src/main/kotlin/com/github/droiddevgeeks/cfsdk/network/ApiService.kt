@@ -7,5 +7,5 @@ import retrofit2.http.GET
 
 interface ApiService {
     @GET("assets/update.json")
-    fun getUpdates(): Call<SDK>
+    fun getUpdates(): Call<List<SDK>>
 }

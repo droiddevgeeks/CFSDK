@@ -1,7 +1,9 @@
 package com.github.droiddevgeeks.cfsdk.services
 
+import com.github.droiddevgeeks.cfsdk.helper.CFIDEPlatformChecker
 import com.github.droiddevgeeks.cfsdk.network.ApiClient
 import com.github.droiddevgeeks.cfsdk.network.model.SDK
+import com.github.droiddevgeeks.cfsdk.network.model.SDKPlatform
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
@@ -29,9 +31,13 @@ class CFSDKUpdateCheckerService(private val project: Project) {
     }
 
     companion object {
-        private val INTERVAL: Long = TimeUnit.HOURS.toMillis(1)
+        private val INTERVAL: Long = TimeUnit.MINUTES.toMillis(1)
         private const val NOTIFICATION_GROUP_ID = "SDK Updates"
         private const val UPDATE_URL = "https://docs.cashfree.com/docs/android-changelog"
+    }
+
+    private val sdkPlatform: SDKPlatform by lazy {
+        CFIDEPlatformChecker.getSDKPlatformInfo()
     }
 
     private val alarm: Alarm by lazy {
@@ -59,19 +65,27 @@ class CFSDKUpdateCheckerService(private val project: Project) {
 
     private suspend fun fetchSdkUpdates(): Boolean {
         val job = CoroutineScope(Dispatchers.Default).async {
-            val apiCall: Call<SDK> = ApiClient.apiService.getUpdates()
+            val apiCall: Call<List<SDK>> = ApiClient.apiService.getUpdates()
             val data = apiCall.execute().body()
             data
         }
         try {
             val data = job.await()
-            thisLogger().warn("UpdateCheckerService::: ${data}")
+            thisLogger().warn("UpdateCheckerService::: $data")
+            thisLogger().warn("UpdateCheckerService::: ${sdkPlatform}")
             data?.let {
-                if (previousSdkVersion < it.currentVersion) {
-                    previousSdkVersion = it.currentVersion
-                    changeLogUrl = it.url
-                    return true
-                } else return false
+                val sdk = it.find { sdkInfo ->
+                    sdkPlatform.toString().contentEquals(sdkInfo.platform, true)
+                }
+                sdk?.let {
+                    if (previousSdkVersion <= sdk.currentVersion) {
+                        previousSdkVersion = sdk.currentVersion
+                        changeLogUrl = sdk.url
+                        return true
+                    } else return false
+                } ?: kotlin.run {
+                    return false
+                }
             } ?: kotlin.run {
                 return false
             }
