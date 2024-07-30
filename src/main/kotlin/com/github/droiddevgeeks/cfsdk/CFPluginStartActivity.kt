@@ -7,14 +7,10 @@ import com.intellij.openapi.startup.ProjectActivity
 
 class CFPluginStartActivity : ProjectActivity {
 
-    init {
-        thisLogger().warn("CFPluginStartActivity init")
-    }
-
     override suspend fun execute(project: Project) {
         val service = project.getService(CFSDKUpdateCheckerService::class.java)
         service?.addScheduleForCheckUpdates() ?: run {
-            thisLogger().warn("CFPluginStartActivity Service not init")
+            thisLogger().info("CFPluginStartActivity Service not init")
         }
     }
 }
