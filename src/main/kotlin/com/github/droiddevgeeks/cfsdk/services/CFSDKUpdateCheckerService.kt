@@ -1,6 +1,6 @@
 package com.github.droiddevgeeks.cfsdk.services
 
-import com.github.droiddevgeeks.cfsdk.helper.CFIDEPlatformChecker
+import com.github.droiddevgeeks.cfsdk.helper.CFChecker
 import com.github.droiddevgeeks.cfsdk.network.ApiClient
 import com.github.droiddevgeeks.cfsdk.network.model.SDK
 import com.github.droiddevgeeks.cfsdk.network.model.SDKPlatform
@@ -36,7 +36,7 @@ class CFSDKUpdateCheckerService(private val project: Project) {
     }
 
     private val sdkPlatform: SDKPlatform by lazy {
-        CFIDEPlatformChecker.getSDKPlatformInfo()
+        CFChecker.getSDKPlatformInfo()
     }
 
     private val alarm: Alarm by lazy {
@@ -53,9 +53,9 @@ class CFSDKUpdateCheckerService(private val project: Project) {
 
     private fun checkForUpdates() {
         CoroutineScope(Dispatchers.Default).launch {
-            val hasUpdates = fetchSdkUpdates()
+            val hasUpdates = CFChecker.hasCashFreeLibrary() && fetchSdkUpdates()
             if (hasUpdates) {
-                thisLogger().info("UpdateCheckerService has update")
+                thisLogger().warn("UpdateCheckerService has update")
                 showNotification()
             }
             addScheduleForCheckUpdates()

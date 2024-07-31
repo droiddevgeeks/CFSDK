@@ -10,7 +10,7 @@ class CFPluginStartActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
         val service = project.getService(CFSDKUpdateCheckerService::class.java)
         service?.addScheduleForCheckUpdates() ?: run {
-            thisLogger().info("CFPluginStartActivity Service not init")
+            thisLogger().warn("CFPluginStartActivity Service not init")
         }
     }
 }
