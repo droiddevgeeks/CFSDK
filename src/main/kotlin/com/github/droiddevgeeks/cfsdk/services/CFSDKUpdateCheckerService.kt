@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit
 class CFSDKUpdateCheckerService(private val project: Project) {
 
     companion object {
-        private val INTERVAL: Long = TimeUnit.DAYS.toMillis(1)
+        private var DAY_COUNT: Long = 1L
+        private var INTERVAL: Long = TimeUnit.DAYS.toMillis(DAY_COUNT)
         private const val NOTIFICATION_GROUP_ID = "SDK Updates"
         private const val NOTIFICATION_TITLE = "CashFree SDK Update Available"
         private const val NOTIFICATION_CONTENT = "Click here to check the latest SDK information"
@@ -44,7 +45,6 @@ class CFSDKUpdateCheckerService(private val project: Project) {
     }
 
     private var currentNotification: Notification? = null
-    private var previousSdkVersion = 20117
     private var changeLogUrl: String? = null
 
     fun addScheduleForCheckUpdates() {
@@ -53,7 +53,7 @@ class CFSDKUpdateCheckerService(private val project: Project) {
 
     private fun checkForUpdates() {
         CoroutineScope(Dispatchers.Default).launch {
-            val hasUpdates = CFChecker.hasCashFreeLibrary() && fetchSdkUpdates()
+            val hasUpdates = fetchSdkUpdates()
             if (hasUpdates) {
                 thisLogger().warn("UpdateCheckerService has update")
                 showNotification()
@@ -75,9 +75,11 @@ class CFSDKUpdateCheckerService(private val project: Project) {
                     sdkPlatform.toString().contentEquals(sdkInfo.platform, true)
                 }
                 sdk?.let {
-                    previousSdkVersion = sdk.currentVersion
-                    changeLogUrl = sdk.url
-                    return true
+                    val currVersion = sdk.currentVersion.replace(".", "")
+                    if (hasAnyUpdate(currVersion)) {
+                        changeLogUrl = sdk.url
+                        return true
+                    }
                 } ?: kotlin.run {
                     return false
                 }
@@ -87,6 +89,16 @@ class CFSDKUpdateCheckerService(private val project: Project) {
         } catch (_: Exception) {
         }
         return false
+    }
+
+    private fun hasAnyUpdate(currVersion: String): Boolean {
+        val cfLibInfo = CFChecker.getCashFreeLibraryInfo()
+        val installedVersion = cfLibInfo.second
+            .split(":")
+            .last()
+            .replace(".", "")
+            .replace("@aar", "")
+        return cfLibInfo.first && installedVersion < currVersion
     }
 
     private fun showNotification() {
@@ -103,6 +115,7 @@ class CFSDKUpdateCheckerService(private val project: Project) {
             override fun actionPerformed(e: AnActionEvent) {
                 BrowserUtil.browse(changeLogUrl ?: UPDATE_URL)
                 notification.expire()
+                INTERVAL = TimeUnit.DAYS.toMillis(++DAY_COUNT)
             }
         })
         currentNotification = notification

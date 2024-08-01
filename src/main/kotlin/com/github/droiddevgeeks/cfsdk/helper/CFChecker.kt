@@ -24,10 +24,10 @@ object CFChecker {
         return sdkPlatform
     }
 
-    fun hasCashFreeLibrary(): Boolean {
-        var hasCFLibrary = false
+    fun getCashFreeLibraryInfo(): Pair<Boolean, String> {
+        var cfLibraryInfo: Pair<Boolean, String> = Pair(false, "")
         val projects = ProjectManager.getInstance().openProjects
-        if (projects.isEmpty()) return hasCFLibrary
+        if (projects.isEmpty()) return cfLibraryInfo
         projects.forEach { project ->
             val modules = ModuleManager.getInstance(project).modules
             for (module in modules) {
@@ -35,14 +35,15 @@ object CFChecker {
                 orderEnumerator.forEach { orderEntry ->
                     if (orderEntry is LibraryOrderEntry) {
                         orderEntry.library?.name?.let { name ->
-                            if (name.contains("cashfree", true)) hasCFLibrary = true
+                            if (name.contains("cashfree", true)) {
+                                cfLibraryInfo = cfLibraryInfo.copy(true, name)
+                            }
                         }
                     }
                     true
                 }
             }
         }
-        return hasCFLibrary
+        return cfLibraryInfo
     }
-
 }
